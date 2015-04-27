@@ -1,28 +1,58 @@
 ---
+  # The name property is used to give a quick description of the task.
+  # It is displayed when the task is run during 'vagrant up'.
+  # The next line after the name property is the Ansible module that will be
+  # used. The properties below that line (indented) are properties of that
+  # specific module.
+  # Techncially, a lot--if not all--of these commands can be done via bash 
+  # commands using the command module (http://docs.ansible.com/command_module.html).
 
+
+  # Currently setting up ansible to run all of these tasks on all machines. 
+  # Hosts can be edited to include only certain machines/IP addresses/groups.
+  # 'all' can and should be edited later.
 - hosts: all
+  # Making sure that sudo is available to use for the tasks.
   sudo: True
   tasks:
+    # This task will update everything before moving on.
+    # I think update_cache can technically be run as a part of
+    # the other steps, but it seems helpful to run this at the beginning.
     - name: updating apt cache
       apt: update_cache=yes
+    # Need to install this in order to add the java repository
     - name: adding python-software-properties 
       apt: name=python-software-properties
     - name: adding java repository
+    # Adds the java repository
       apt_repository: repo='ppa:webupd8team/java'
+    # This step takes care of the config menu that pops up when installing
+    # Java. Without this step, Ansible gets hung up and isn't able to install Java.
     - name: automatically select the Oracle License - 
       shell: echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+    # Actually installing java 8
     - name: installing java8
       apt: name=oracle-java8-installer
+    # Creating the directory to place solr in. This can of course be adjusted as 
+    # long as it matches the directory in the next few steps.
     - name: create solr directory
       file: 
         path: "/etc/solr" 
         state: directory
+    # Using the get_url module to download solr5.1.0. Serves the same function as
+    # wget or curl.
     - name: get solr5.1.0
       get_url: 
         url: "http://apache.spinellicreations.com/lucene/solr/5.1.0/solr-5.1.0.tgz"
         dest: "/etc/solr/solr-5.1.0.tgz"
+    # This module will unzip solr. It does not delete the .tgz file.
     - name: unzip solr
       unarchive:
         src: "/etc/solr/solr-5.1.0.tgz"
         dest: "/etc/solr"
         copy: no
+    # Removing the .tgz file
+    - name: removing solr-5.1.0.tgz
+      file:
+        path: "/etc/solr/solr-5.1.0.tgz"
+        state: absent
