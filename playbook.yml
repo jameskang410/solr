@@ -1,0 +1,28 @@
+---
+
+- hosts: all
+  sudo: True
+  tasks:
+    - name: updating apt cache
+      apt: update_cache=yes
+    - name: adding python-software-properties 
+      apt: name=python-software-properties
+    - name: adding java repository
+      apt_repository: repo='ppa:webupd8team/java'
+    - name: automatically select the Oracle License - 
+      shell: echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+    - name: installing java8
+      apt: name=oracle-java8-installer
+    - name: create solr directory
+      file: 
+        path: "/etc/solr" 
+        state: directory
+    - name: get solr5.1.0
+      get_url: 
+        url: "http://apache.spinellicreations.com/lucene/solr/5.1.0/solr-5.1.0.tgz"
+        dest: "/etc/solr/solr-5.1.0.tgz"
+    - name: unzip solr
+      unarchive:
+        src: "/etc/solr/solr-5.1.0.tgz"
+        dest: "/etc/solr"
+        copy: no
