@@ -33,26 +33,24 @@
     # Actually installing java 8
     - name: installing java8
       apt: name=oracle-java8-installer
-    # Creating the directory to place solr in. This can of course be adjusted as 
-    # long as it matches the directory in the next few steps.
-    - name: create solr directory
-      file: 
-        path: "/etc/solr" 
-        state: directory
     # Using the get_url module to download solr5.1.0. Serves the same function as
     # wget or curl.
     - name: get solr5.1.0
       get_url: 
         url: "http://apache.spinellicreations.com/lucene/solr/5.1.0/solr-5.1.0.tgz"
-        dest: "/etc/solr/solr-5.1.0.tgz"
-    # This module will unzip solr. It does not delete the .tgz file.
+        dest: "/home/vagrant/solr-5.1.0.tgz"
+    # This module will unarchive solr
     - name: unzip solr
       unarchive:
-        src: "/etc/solr/solr-5.1.0.tgz"
-        dest: "/etc/solr"
+        src: "/home/vagrant/solr-5.1.0.tgz"
+        dest: "/home/vagrant/"
         copy: no
-    # Removing the .tgz file
-    - name: removing solr-5.1.0.tgz
-      file:
-        path: "/etc/solr/solr-5.1.0.tgz"
-        state: absent
+    # solr node on port 8983
+    - name: run bash script to set up solr for production and set up a solr node on port 8983
+      command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr -p 8983
+    # solr2 node on port 8984
+    - name: set up second node on port 8984
+      command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr2 -p 8984
+    # solr3 node on port 8985
+    - name: set up third node on port 8985
+      command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr3 -p 8985

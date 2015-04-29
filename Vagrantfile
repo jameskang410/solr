@@ -20,7 +20,9 @@ Vagrant.configure(2) do |config|
   # settings. Accessing "localhost:8983" will access port 8983 on 
   # the guest machine.
   config.vm.network :forwarded_port, host: 8983, guest: 8983
-
+  config.vm.network :forwarded_port, host: 8984, guest: 8984
+  config.vm.network :forwarded_port, host: 8985, guest: 8985
+  config.vm.network :forwarded_port, host: 8986, guest: 8986
   # Setting up ansible as the provisioner.
   # Also setting up playbook.yml as the file that will contain the
   # desired tasks to run.
