@@ -56,8 +56,11 @@
         src: "/home/vagrant/solr-5.1.0.tgz"
         dest: "/home/vagrant/"
         copy: no
-    # solr node on port 8983
-    - name: run bash script to set up solr for production and set up a solr node on port 8983
+
+    # using a bash script supplied by solr to install solar instances as services 
+    # (ex: able to check status using "sudo service solr status")
+    # this is the preferred method for production
+    - name: set up solr node on port 8983
       command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr -p 8983 -u vagrant
       become: yes
       become_method: sudo
@@ -71,32 +74,9 @@
       command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr3 -p 8985 -u vagrant
       become: yes
       become_method: sudo
-    # need to change permissions in order to create cores
-    - name: change permissions for /var/solr
-      file:
-        path: /var/solr/
-        group: vagrant
-        owner: vagrant
-        recurse: yes
-      become: yes
-      become_method: sudo
-    - name: change permissions for /var/solr2
-      file:
-        path: /var/solr2/
-        group: vagrant
-        owner: vagrant
-        recurse: yes
-      become: yes
-      become_method: sudo
-    - name: change permissions for /var/solr3
-      file:
-        path: /var/solr3/
-        group: vagrant
-        owner: vagrant
-        recurse: yes
-      become: yes
-      become_method: sudo
-    # creating cores for all 3 nodes - should not be done in sudo
+
+    # creating cores for all 3 nodes - should not be done in sudo or else files
+    # will be owned by root (but need to be run by vagrant)
     - name: set up core1 on node 1 (port 8983)
       command: /home/vagrant/solr-5.1.0/bin/solr create -c core1 -p 8983
     - name: set up core1 on node 2 (port 8984)
