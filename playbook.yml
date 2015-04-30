@@ -12,33 +12,44 @@
   # Hosts can be edited to include only certain machines/IP addresses/groups.
   # 'all' can and should be edited later.
 - hosts: all
-  # Making sure that sudo is available to use for the tasks.
-  sudo: True
+
   tasks:
     # This task will update everything before moving on.
     # I think update_cache can technically be run as a part of
     # the other steps, but it seems helpful to run this at the beginning.
     - name: updating apt cache
       apt: update_cache=yes
+      become: yes
+      become_method: sudo
     # Need to install this in order to add the java repository
     - name: adding python-software-properties 
       apt: name=python-software-properties
-    - name: adding java repository
+      become: yes
+      become_method: sudo
     # Adds the java repository
+    - name: adding java repository
       apt_repository: repo='ppa:webupd8team/java'
+      become: yes
+      become_method: sudo
     # This step takes care of the config menu that pops up when installing
     # Java. Without this step, Ansible gets hung up and isn't able to install Java.
     - name: automatically select the Oracle License - 
       shell: echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+      become: yes
+      become_method: sudo
     # Actually installing java 8
     - name: installing java8
       apt: name=oracle-java8-installer
+      become: yes
+      become_method: sudo
     # Using the get_url module to download solr5.1.0. Serves the same function as
     # wget or curl.
     - name: get solr5.1.0
       get_url: 
         url: "http://apache.spinellicreations.com/lucene/solr/5.1.0/solr-5.1.0.tgz"
         dest: "/home/vagrant/solr-5.1.0.tgz"
+      become: yes
+      become_method: sudo
     # This module will unarchive solr
     - name: unzip solr
       unarchive:
@@ -47,10 +58,48 @@
         copy: no
     # solr node on port 8983
     - name: run bash script to set up solr for production and set up a solr node on port 8983
-      command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr -p 8983
+      command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr -p 8983 -u vagrant
+      become: yes
+      become_method: sudo
     # solr2 node on port 8984
     - name: set up second node on port 8984
-      command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr2 -p 8984
+      command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr2 -p 8984 -u vagrant
+      become: yes
+      become_method: sudo
     # solr3 node on port 8985
     - name: set up third node on port 8985
-      command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr3 -p 8985
+      command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr3 -p 8985 -u vagrant
+      become: yes
+      become_method: sudo
+    # need to change permissions in order to create cores
+    - name: change permissions for /var/solr
+      file:
+        path: /var/solr/
+        group: vagrant
+        owner: vagrant
+        recurse: yes
+      become: yes
+      become_method: sudo
+    - name: change permissions for /var/solr2
+      file:
+        path: /var/solr2/
+        group: vagrant
+        owner: vagrant
+        recurse: yes
+      become: yes
+      become_method: sudo
+    - name: change permissions for /var/solr3
+      file:
+        path: /var/solr3/
+        group: vagrant
+        owner: vagrant
+        recurse: yes
+      become: yes
+      become_method: sudo
+    # creating cores for all 3 nodes - should not be done in sudo
+    - name: set up core1 on node 1 (port 8983)
+      command: /home/vagrant/solr-5.1.0/bin/solr create -c core1 -p 8983
+    - name: set up core1 on node 2 (port 8984)
+      command: /home/vagrant/solr-5.1.0/bin/solr create -c core1 -p 8984
+    - name: set up core1 on node 3 (port 8985)
+      command: /home/vagrant/solr-5.1.0/bin/solr create -c core1 -p 8985
