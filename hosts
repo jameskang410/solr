@@ -1,0 +1,7 @@
+# This file sets up an alias (accessible in the  Ansible playbook using
+# {{ inventory_hostname }}) for each box that was created via Vagrant.
+# The Vagrantfile arbitrarily creates 3 boxes that have the 3 static IP
+# addresses listed below.
+host1 ansible_ssh_host=10.0.0.0
+host2 ansible_ssh_host=10.0.0.2
+host3 ansible_ssh_host=10.0.0.3

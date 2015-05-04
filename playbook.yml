@@ -7,6 +7,9 @@
   # Techncially, a lot--if not all--of these commands can be done via bash 
   # commands using the command module (http://docs.ansible.com/command_module.html).
 
+  # The {{ inventory_hostname }} variable refers to the hostname alias that was 
+  # created in the hosts file (in the same directory as the Vagrantfile and
+  # this playbook).
 
   # Currently setting up ansible to run all of these tasks on all machines. 
   # Hosts can be edited to include only certain machines/IP addresses/groups.
@@ -57,29 +60,41 @@
         dest: "/home/vagrant/"
         copy: no
 
-    # using a bash script supplied by solr to install solar instances as services 
+    # using a bash script supplied by solr to install solar instance as service
     # (ex: able to check status using "sudo service solr status")
     # this is the preferred method for production
-    - name: set up solr node on port 8983
+    - name: set up solr node on host1
       command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr -p 8983 -u vagrant
       become: yes
       become_method: sudo
-    # solr2 node on port 8984
-    - name: set up second node on port 8984
-      command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr2 -p 8984 -u vagrant
-      become: yes
-      become_method: sudo
-    # solr3 node on port 8985
-    - name: set up third node on port 8985
-      command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr3 -p 8985 -u vagrant
-      become: yes
-      become_method: sudo
-
-    # creating cores for all 3 nodes - should not be done in sudo or else files
+      when: '"{{ inventory_hostname }}" == "host1"'
+    # creating core - should not be done in sudo or else files
     # will be owned by root (but need to be run by vagrant)
-    - name: set up core1 on node 1 (port 8983)
+    - name: set up core1 on host1 (port 8983)
       command: /home/vagrant/solr-5.1.0/bin/solr create -c core1 -p 8983
-    - name: set up core1 on node 2 (port 8984)
+      when: '"{{ inventory_hostname }}" == "host1"'
+
+    # installing solr as an instance on host2
+    - name: set up solr node on host2
+      command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr -p 8984 -u vagrant
+      become: yes
+      become_method: sudo
+      when: '"{{ inventory_hostname }}" == "host2"'
+    # creating core - should not be done in sudo or else files
+    # will be owned by root (but need to be run by vagrant)
+    - name: set up core1 on host2 (port 8984)
       command: /home/vagrant/solr-5.1.0/bin/solr create -c core1 -p 8984
-    - name: set up core1 on node 3 (port 8985)
+      when: '"{{ inventory_hostname }}" == "host2"'
+
+    # installing solr as an instance on host3
+    - name: set up solr node on host3
+      command: sudo bash /home/vagrant/solr-5.1.0/bin/install_solr_service.sh /home/vagrant/solr-5.1.0.tgz -s solr -p 8985 -u vagrant
+      become: yes
+      become_method: sudo
+      when: '"{{ inventory_hostname }}" == "host3"'
+
+    # creating core - should not be done in sudo or else files
+    # will be owned by root (but need to be run by vagrant)
+    - name: set up core1 on host3 (port 8985)
       command: /home/vagrant/solr-5.1.0/bin/solr create -c core1 -p 8985
+      when: '"{{ inventory_hostname }}" == "host3"'
